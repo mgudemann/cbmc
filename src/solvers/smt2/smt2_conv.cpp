@@ -28,6 +28,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <solvers/flattening/c_bit_field_replacement_type.h>
 #include <solvers/floatbv/float_bv.h>
 
+#include <iostream>
+
 #include "smt2_conv.h"
 
 // Mark different kinds of error condition
@@ -842,12 +844,20 @@ void smt2_convt::convert_byte_update(const byte_update_exprt &expr)
   mp_integer mask=power(2, value_width)-1;
   exprt one_mask=from_integer(mask, unsignedbv_typet(total_width));
 
+  std::cout << "INFO: total width " << total_width
+            << "\n value width " << value_width
+            << "\n mask " << mask
+            << "\n one mask " << one_mask.pretty()
+            << std::endl;
   exprt distance=mult_exprt(
     expr.offset(),
     from_integer(8, expr.offset().type()));
 
-  exprt and_expr=bitand_exprt(expr.op(), bitnot_exprt(one_mask));
-  exprt ext_value=typecast_exprt(expr.value(), one_mask.type());
+  exprt and_expr=bitand_exprt(
+    typecast_exprt(expr.op(), unsignedbv_typet(total_width)),
+                              // expr.op(),
+    bitnot_exprt(one_mask));
+  exprt ext_value=typecast_exprt(expr.value(), unsignedbv_typet(total_width));
   exprt or_expr=bitor_exprt(and_expr, shl_exprt(ext_value, distance));
 
   unflatten(BEGIN, expr.type());
@@ -2274,6 +2284,9 @@ void smt2_convt::convert_typecast(const typecast_exprt &expr)
     }
     else if(src_type.id()==ID_struct) // flatten a struct to a bit-vector
     {
+      bool signed_extend=false;
+      size_t src_width=boolbv_width(src_type);
+      size_t dest_width=boolbv_width(dest_type);
       if(use_datatypes)
       {
         assert(boolbv_width(src_type)==boolbv_width(dest_type));
@@ -2281,8 +2294,23 @@ void smt2_convt::convert_typecast(const typecast_exprt &expr)
       }
       else
       {
-        assert(boolbv_width(src_type)==boolbv_width(dest_type));
-        convert_expr(src); // nothing else to do!
+        if(src_width<dest_width)
+        {
+          signed_extend=(dest_type.id()==ID_signedbv);
+          if(!signed_extend)
+          {
+            out << "((_ zero_extend " << (dest_width-src_width) << ") ";
+            convert_expr(src);
+            out << ") ";
+          }
+          else
+            assert(false && "not yet supported");
+        }
+        else
+        {
+          assert(boolbv_width(src_type)==boolbv_width(dest_type));
+          convert_expr(src); // nothing else to do!
+        }
       }
     }
     else if(src_type.id()==ID_union) // flatten a union

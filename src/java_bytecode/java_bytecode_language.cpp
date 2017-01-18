@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include <string>
 
 #include <util/symbol_table.h>
@@ -21,6 +23,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "java_entry_point.h"
 #include "java_bytecode_parser.h"
 #include "java_class_loader.h"
+#include "java_library_functions.h"
 
 #include "expr2java.h"
 
@@ -203,6 +206,10 @@ bool java_bytecode_languaget::typecheck(
          max_user_array_length))
       return true;
   }
+
+  // implemented stubbed methods supported in the CBMC/Java library
+  // java_library_functionst java_lib(symbol_table);
+  // java_lib.implement_stubbed_library_functions();
 
   // now typecheck all
   if(java_bytecode_typecheck(

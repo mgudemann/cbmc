@@ -208,8 +208,8 @@ bool java_bytecode_languaget::typecheck(
   }
 
   // implemented stubbed methods supported in the CBMC/Java library
-  // java_library_functionst java_lib(symbol_table);
-  // java_lib.implement_stubbed_library_functions();
+  java_library_functionst java_lib(symbol_table);
+  java_lib.implement_stubbed_library_functions();
 
   // now typecheck all
   if(java_bytecode_typecheck(

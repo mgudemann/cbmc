@@ -830,6 +830,7 @@ void goto_convertt::remove_side_effect(
   {
     error().source_location=expr.find_source_location();
     error() << "cannot remove side effect (" << statement << ")" << eom;
+    assert(false);
     throw 0;
   }
 }

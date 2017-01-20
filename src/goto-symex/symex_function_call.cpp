@@ -82,6 +82,9 @@ void goto_symext::parameter_assignments(
 
     const irep_idt &identifier=parameter.get_identifier();
 
+    std::cout << "INFO: identifier '" << identifier << "'"
+              << std::endl;
+
     if(identifier==irep_idt())
       throw "no identifier for function parameter";
 

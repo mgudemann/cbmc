@@ -1104,6 +1104,10 @@ codet java_bytecode_convert_methodt::convert_instructions(
       exprt r=op[0];
       if(r.type()!=method_return_type)
         r=typecast_exprt(r, method_return_type);
+      std::cout << "INFO: " << method_id
+                << " type " << method_return_type.pretty()
+                << " expr " << r.pretty()
+                << std::endl;
       c=code_returnt(r);
     }
     else if(statement==patternt("?astore"))

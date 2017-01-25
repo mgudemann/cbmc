@@ -213,8 +213,6 @@ void goto_convert_functionst::convert_function(const irep_idt &identifier)
   const symbolt &symbol=ns.lookup(identifier);
   goto_functionst::goto_functiont &f=functions.function_map[identifier];
 
-  std::cout << "INFO: convert " << identifier << std::endl;
-
   // make tmp variables local to function
   tmp_symbol_prefix=id2string(symbol.name)+"::$tmp::";
   temporary_counter=0;

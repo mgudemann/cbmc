@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include <util/std_expr.h>
 #include <util/prefix.h>
 
@@ -177,6 +179,9 @@ void java_bytecode_typecheckt::typecheck_expr_symbol(symbol_exprt &expr)
 
   if(s_it==symbol_table.symbols.end())
   {
+    if(!has_prefix(id2string(identifier), "java::"))
+      std::cout << "ERROR: no java prefix for " << identifier
+                << std::endl;
     assert(has_prefix(id2string(identifier), "java::"));
 
     // no, create the symbol

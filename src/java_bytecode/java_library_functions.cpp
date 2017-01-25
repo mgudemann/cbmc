@@ -31,65 +31,52 @@ void java_library_functionst::implement_array_clone()
   code_blockt code;
   code_typet &code_type=to_code_type(symbol.type);
   code_typet::parameterst &parameters(code_type.parameters());
+
   parameters.resize(0);
-  typet type=java_type_from_string("[Ljava/lang/Object;");
-  pointer_typet object_ref_type(type);
-
-  const typet &return_type=java_type_from_string("[Lenumtest;");
-
-  std::cout << "INFO: return type " << code_type.return_type().id()
-            << std::endl;
+  typet ref_array_type=java_array_type('a');
+  pointer_typet object_ref_type=to_pointer_type(ref_array_type);
 
   code_typet::parametert this_p(object_ref_type);
   irep_idt base_name="this";
-  irep_idt id="java::array[reference].clone:()Ljava/lang/Object::this";
+  irep_idt id="java::array[reference].clone:()Ljava/lang/Object;::this";
 
   this_p.set_this();
   this_p.set_base_name(base_name);
   this_p.set_identifier(id);
   parameters.insert(parameters.begin(), this_p);
 
+  symbol_exprt tmp_length("java::tmp_length", java_int_type());
+  tmp_length.set(ID_C_base_name, "java::tmp_length");
+
+  // get length of original array
+  const dereference_exprt array(this_p, this_p.type().subtype());
+  assert(this_p.type().subtype().id()==ID_symbol);
+  const member_exprt length(array, "length", java_int_type());
+  code.copy_to_operands(code_assignt(tmp_length, length));
+
   parameter_symbolt parameter_symbol;
   parameter_symbol.base_name=base_name;
   parameter_symbol.mode=ID_java;
   parameter_symbol.name=id;
-  parameter_symbol.type=type;
+  parameter_symbol.type=ref_array_type;
   symbol_table.add(parameter_symbol);
 
-  symbolt length_sym;
-  length_sym.name="array-length";
-  length_sym.base_name="array-length";
-  length_sym.mode=ID_java;
-  symbol_table.add(length_sym);
-  length_sym.type=java_int_type();
-  constant_exprt enum_entries=from_integer(3, java_int_type());
-
-  const auto &length_sym_expr=length_sym.symbol_expr();
-
-  const pointer_typet ref_type=
-    java_array_type('a');
-
-  side_effect_exprt java_new_array(ID_java_new_array, ref_type);
-  java_new_array.copy_to_operands(enum_entries);
+  side_effect_exprt java_new_array(ID_java_new_array, ref_array_type);
+  java_new_array.copy_to_operands(tmp_length);
   java_new_array.type().subtype()
     .set(ID_C_element_type, java_type_from_string("Lenumtest;"));
 
-  irep_idt arr_base_name="tmp_array1_id";
-  irep_idt arr_identifier="tmp_array1_id";
+  irep_idt arr_base_name="java::tmp_array1_id";
+  irep_idt arr_identifier="java::tmp_array1_id";
 
-  auxiliary_symbolt tmp_symbol;
-  tmp_symbol.base_name=arr_base_name;
-  tmp_symbol.is_static_lifetime=false;
-  tmp_symbol.mode=ID_java;
-  tmp_symbol.name=arr_identifier;
-  tmp_symbol.type=ref_type;
-  symbol_table.add(tmp_symbol);
-
-  symbol_exprt tmp_var(arr_identifier, ref_type);
+  symbol_exprt tmp_var(arr_identifier, ref_array_type);
   tmp_var.set(ID_C_base_name, arr_base_name);
 
   code.copy_to_operands(code_assignt(tmp_var, java_new_array));
-  code.copy_to_operands(code_returnt(tmp_var));
+  code.copy_to_operands(code_returnt(
+    typecast_exprt(
+      tmp_var,
+      java_type_from_string("Ljava/lang/Object;"))));
 
   symbol.value=code;
 }

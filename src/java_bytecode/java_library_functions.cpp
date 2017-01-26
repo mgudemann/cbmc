@@ -20,6 +20,8 @@ Author: Daniel Kroening, kroening@kroening.com
 #include "java_types.h"
 #include "java_library_functions.h"
 
+size_t java_library_functionst::gensym_counter=0;
+
 void java_library_functionst::implement_array_clone()
 {
   symbolt &symbol=symbol_table.lookup(array_clone_id);
@@ -64,7 +66,7 @@ void java_library_functionst::implement_array_clone()
   side_effect_exprt java_new_array(ID_java_new_array, ref_array_type);
   java_new_array.copy_to_operands(tmp_length);
   java_new_array.type().subtype()
-    .set(ID_C_element_type, java_type_from_string("Lenumtest;"));
+    .set(ID_C_element_type, java_type_from_string("Ljava/lang/Object;"));
 
   irep_idt arr_base_name="java::tmp_array1_id";
   irep_idt arr_identifier="java::tmp_array1_id";
@@ -73,6 +75,39 @@ void java_library_functionst::implement_array_clone()
   tmp_var.set(ID_C_base_name, arr_base_name);
 
   code.copy_to_operands(code_assignt(tmp_var, java_new_array));
+
+  // copy elements
+  irep_idt iter_name="array_clone_iter";
+  symbolt counter=java_gensym(iter_name, tmp_length.type());
+  counter.type=tmp_length.type();
+  exprt counter_expr=counter.symbol_expr();
+
+  exprt java_zero=from_integer(0, java_int_type());
+  code.copy_to_operands(code_assignt(counter_expr, java_zero));
+
+  std::string head_name=as_string(counter.base_name)+"_header";
+  code_labelt init_head_label(head_name, code_skipt());
+  code_gotot goto_head(head_name);
+
+  code.copy_to_operands(init_head_label);
+
+  std::string done_name=as_string(counter.base_name)+"_done";
+  code_labelt init_done_label(done_name, code_skipt());
+  code_gotot goto_done(done_name);
+
+  code_ifthenelset done_test;
+  done_test.cond()=equal_exprt(counter_expr, tmp_length);
+  done_test.then_case()=goto_done;
+
+  code.copy_to_operands(done_test);
+
+  exprt java_one=from_integer(1, java_int_type());
+  code_assignt incr(counter_expr, plus_exprt(counter_expr, java_one));
+
+  code.copy_to_operands(incr);
+  code.copy_to_operands(goto_head);
+  code.copy_to_operands(init_done_label);
+
   code.copy_to_operands(code_returnt(
     typecast_exprt(
       tmp_var,
@@ -99,4 +134,24 @@ void java_library_functionst::implement_stubbed_library_functions()
     if(is_stub_array_clone(symb.first))
       implement_array_clone();
   }
+}
+
+
+symbolt java_library_functionst::java_gensym(irep_idt &prefix, typet &type)
+{
+  std::string new_name=
+    "java::"+id2string(prefix)+"_"+std::to_string(gensym_counter);
+
+  symbolt new_symbol;
+  new_symbol.base_name=new_name;
+  new_symbol.name=new_name;
+  new_symbol.type=type;
+  new_symbol.mode=ID_java;
+  gensym_counter++;
+
+  assert(!symbol_table.has_symbol(new_name) &&
+         "symbol must be unique");
+  symbol_table.add(new_symbol);
+
+  return new_symbol;
 }

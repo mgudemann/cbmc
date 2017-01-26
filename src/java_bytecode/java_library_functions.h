@@ -19,9 +19,11 @@ class java_library_functionst
 
   symbol_tablet &symbol_table;
   bool is_stub_array_clone(const irep_idt &);
+  symbolt java_gensym(irep_idt &, typet &);
+  static size_t gensym_counter;
  public:
   explicit java_library_functionst(symbol_tablet &_symbol_table) :
-  symbol_table(_symbol_table)
+    symbol_table(_symbol_table)
   {
   }
 

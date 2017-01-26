@@ -54,7 +54,6 @@ void java_library_functionst::implement_array_clone()
   const dereference_exprt array(this_p, this_p.type().subtype());
   assert(this_p.type().subtype().id()==ID_symbol);
   const member_exprt length(array, "length", java_int_type());
-  code.copy_to_operands(code_assignt(tmp_length, length));
 
   parameter_symbolt parameter_symbol;
   parameter_symbol.base_name=base_name;
@@ -74,8 +73,6 @@ void java_library_functionst::implement_array_clone()
   symbol_exprt tmp_var(arr_identifier, ref_array_type);
   tmp_var.set(ID_C_base_name, arr_base_name);
 
-  code.copy_to_operands(code_assignt(tmp_var, java_new_array));
-
   // copy elements
   irep_idt iter_name="array_clone_iter";
   symbolt counter=java_gensym(iter_name, tmp_length.type());
@@ -83,13 +80,10 @@ void java_library_functionst::implement_array_clone()
   exprt counter_expr=counter.symbol_expr();
 
   exprt java_zero=from_integer(0, java_int_type());
-  code.copy_to_operands(code_assignt(counter_expr, java_zero));
 
   std::string head_name=as_string(counter.base_name)+"_header";
   code_labelt init_head_label(head_name, code_skipt());
   code_gotot goto_head(head_name);
-
-  code.copy_to_operands(init_head_label);
 
   std::string done_name=as_string(counter.base_name)+"_done";
   code_labelt init_done_label(done_name, code_skipt());
@@ -99,15 +93,17 @@ void java_library_functionst::implement_array_clone()
   done_test.cond()=equal_exprt(counter_expr, tmp_length);
   done_test.then_case()=goto_done;
 
-  code.copy_to_operands(done_test);
-
   exprt java_one=from_integer(1, java_int_type());
   code_assignt incr(counter_expr, plus_exprt(counter_expr, java_one));
 
+  code.copy_to_operands(code_assignt(tmp_length, length));
+  code.copy_to_operands(code_assignt(tmp_var, java_new_array));
+  code.copy_to_operands(code_assignt(counter_expr, java_zero));
+  code.copy_to_operands(init_head_label);
+  code.copy_to_operands(done_test);
   code.copy_to_operands(incr);
   code.copy_to_operands(goto_head);
   code.copy_to_operands(init_done_label);
-
   code.copy_to_operands(code_returnt(
     typecast_exprt(
       tmp_var,

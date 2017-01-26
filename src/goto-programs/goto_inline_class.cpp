@@ -71,7 +71,7 @@ void goto_inlinet::parameter_assignments(
     if(identifier==irep_idt())
     {
       error().source_location=source_location;
-      error() << "no identifier for function parameter" << eom;
+      error() << "LOC1 no identifier for function parameter" << eom;
       throw 0;
     }
 
@@ -208,7 +208,7 @@ void goto_inlinet::parameter_destruction(
     if(identifier==irep_idt())
     {
       error().source_location=source_location;
-      error() << "no identifier for function parameter" << eom;
+      error() << "LOC2 no identifier for function parameter" << eom;
       throw 0;
     }
 

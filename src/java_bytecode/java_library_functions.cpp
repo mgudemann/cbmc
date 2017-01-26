@@ -32,19 +32,18 @@ void java_library_functionst::implement_array_clone()
   assert(symbol.type.id()==ID_code);
   code_typet &code_type=to_code_type(symbol.type);
   code_typet::parameterst &parameters(code_type.parameters());
-  parameters.resize(0);
 
   typet ref_array_type=java_array_type('a');
   pointer_typet object_ref_type=to_pointer_type(ref_array_type);
 
-  code_typet::parametert this_p(object_ref_type);
+  code_typet::parametert &this_p=parameters[0];
   irep_idt base_name="this";
   irep_idt id="java::array[reference].clone:()Ljava/lang/Object;::this";
 
-  this_p.set_this();
   this_p.set_base_name(base_name);
   this_p.set_identifier(id);
-  parameters.insert(parameters.begin(), this_p);
+  if(!this_p.get_this())
+    throw "must be this";
 
   symbolt new_this;
   new_this.base_name=base_name;
@@ -61,16 +60,10 @@ void java_library_functionst::implement_array_clone()
   symbol_exprt tmp_length_expr=tmp_length.symbol_expr();
 
   // get length of original array
-  const dereference_exprt array(new_this.symbol_expr(), new_this.symbol_expr().type().subtype());
+  const dereference_exprt
+    array(new_this.symbol_expr(), new_this.symbol_expr().type().subtype());
   assert(this_p.type().subtype().id()==ID_symbol);
   const member_exprt length(array, "length", java_int_type());
-
-  parameter_symbolt parameter_symbol;
-  parameter_symbol.base_name=base_name;
-  parameter_symbol.mode=ID_java;
-  parameter_symbol.name=id;
-  parameter_symbol.type=ref_array_type;
-  symbol_table.add(parameter_symbol);
 
   side_effect_exprt java_new_array(ID_java_new_array, ref_array_type);
   java_new_array.copy_to_operands(tmp_length_expr);
@@ -108,22 +101,32 @@ void java_library_functionst::implement_array_clone()
   // access source array
   exprt source_array_data=
     member_exprt(
-      dereference_exprt(new_this.symbol_expr(), new_this.symbol_expr().type().subtype()),
+      array,
       "data",
-      java_reference_type(java_object));
+      java_object);
   exprt target_array_data=
     member_exprt(
       dereference_exprt(tmp_var, tmp_var.type().subtype()),
       "data",
-      java_reference_type(java_object));
+      java_object);
+
+  irep_idt source_arr_name="source_arr";
+  symbolt source_array=
+    java_gensym(source_arr_name, java_reference_type(java_object));
+  const symbol_exprt &source_array_expr=source_array.symbol_expr();
+
+  irep_idt target_arr_name="target_arr";
+  symbolt target_array=
+    java_gensym(target_arr_name, java_reference_type(java_object));
+  const symbol_exprt &target_array_expr=target_array.symbol_expr();
 
   exprt source_cell=dereference_exprt(
-    plus_exprt(source_array_data, counter_expr, source_array_data.type()),
+    plus_exprt(source_array_expr, counter_expr, source_array_data.type()),
     source_array_data.type().subtype());
 
   exprt target_cell=dereference_exprt(
-    plus_exprt(target_array_data, counter_expr, target_array_data.type()),
-    source_array_data.type().subtype());
+    plus_exprt(target_array_expr, counter_expr, target_array_data.type()),
+    target_array_data.type().subtype());
 
   irep_idt tmp_elem_name="tmp_element";
   symbolt tmp_elem=java_gensym(tmp_elem_name, java_object);
@@ -133,10 +136,11 @@ void java_library_functionst::implement_array_clone()
   code.copy_to_operands(code_assignt(tmp_length_expr, length));
   code.copy_to_operands(code_assignt(tmp_var, java_new_array));
   code.copy_to_operands(code_assignt(counter_expr, java_zero));
+  code.copy_to_operands(code_assignt(source_array_expr, source_array_data));
   code.copy_to_operands(init_head_label);
   code.copy_to_operands(done_test);
   code.copy_to_operands(code_assignt(tmp_elem_expr, source_cell));
-  code.copy_to_operands(code_assignt(target_cell, tmp_elem_expr));
+  // code.copy_to_operands(code_assignt(target_cell, tmp_elem_expr));
   code.copy_to_operands(incr);
   code.copy_to_operands(goto_head);
   code.copy_to_operands(init_done_label);
@@ -168,7 +172,7 @@ void java_library_functionst::implement_stubbed_library_functions()
   }
 }
 
-symbolt java_library_functionst::java_gensym(irep_idt &prefix, typet &type)
+symbolt java_library_functionst::java_gensym(irep_idt &prefix, const typet &type)
 {
   std::string new_name=
     "java::"+id2string(prefix)+"_"+std::to_string(gensym_counter);

@@ -83,8 +83,12 @@ void goto_symext::parameter_assignments(
     const irep_idt &identifier=parameter.get_identifier();
 
     if(identifier==irep_idt())
-      throw "no identifier for function parameter";
-
+    {
+      std::cout << "INFO: error on identifier: \'"
+                << identifier << "\'"
+                << std::endl;
+      throw "LOC3 no identifier for function parameter";
+    }
     const symbolt &symbol=ns.lookup(identifier);
     symbol_exprt lhs=symbol.symbol_expr();
 

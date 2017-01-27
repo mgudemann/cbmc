@@ -34,6 +34,7 @@ void java_library_functionst::implement_array_clone()
   code_typet::parameterst &parameters(code_type.parameters());
 
   typet ref_array_type=java_array_type('a');
+  typet enumtest_type=java_type_from_string("Lenumtest;");
   pointer_typet object_ref_type=to_pointer_type(ref_array_type);
 
   code_typet::parametert &this_p=parameters[0];
@@ -68,7 +69,12 @@ void java_library_functionst::implement_array_clone()
   side_effect_exprt java_new_array(ID_java_new_array, ref_array_type);
   java_new_array.copy_to_operands(tmp_length_expr);
   java_new_array.type().subtype()
-    .set(ID_C_element_type, java_object);
+    .set(ID_C_element_type, pointer_typet(enumtest_type));
+  java_new_array.type().subtype()
+    .set(ID_C_element_type, pointer_typet(enumtest_type));
+  std::cout << "INFO: ref_array_pointer is " << ref_array_type.id()
+            << ref_array_type.subtype().pretty()
+            << std::endl;
 
   irep_idt arr_base_name="java::tmp_array1_id";
   irep_idt arr_identifier="java::tmp_array1_id";
@@ -103,12 +109,13 @@ void java_library_functionst::implement_array_clone()
     member_exprt(
       array,
       "data",
-      java_object);
+      ref_array_type);
+
   exprt target_array_data=
     member_exprt(
       dereference_exprt(tmp_var, tmp_var.type().subtype()),
       "data",
-      java_object);
+      ref_array_type);
 
   irep_idt source_arr_name="source_arr";
   symbolt source_array=
@@ -117,8 +124,9 @@ void java_library_functionst::implement_array_clone()
 
   irep_idt target_arr_name="target_arr";
   symbolt target_array=
-    java_gensym(target_arr_name, java_reference_type(java_object));
-  const symbol_exprt &target_array_expr=target_array.symbol_expr();
+    java_gensym(target_arr_name, java_reference_type(enumtest_type));
+  const exprt &target_array_expr=
+    typecast_exprt(target_array.symbol_expr(), pointer_typet(java_object));
 
   exprt source_cell=dereference_exprt(
     plus_exprt(source_array_expr, counter_expr, source_array_data.type()),
@@ -136,10 +144,10 @@ void java_library_functionst::implement_array_clone()
   code.copy_to_operands(code_assignt(tmp_length_expr, length));
   code.copy_to_operands(code_assignt(tmp_var, java_new_array));
   code.copy_to_operands(code_assignt(counter_expr, java_zero));
-  code.copy_to_operands(code_assignt(source_array_expr, source_array_data));
+  code.copy_to_operands(code_assignt(target_array_expr, target_array_data));
   code.copy_to_operands(init_head_label);
   code.copy_to_operands(done_test);
-  code.copy_to_operands(code_assignt(tmp_elem_expr, source_cell));
+  // code.copy_to_operands(code_assignt(tmp_elem_expr, source_cell));
   // code.copy_to_operands(code_assignt(target_cell, tmp_elem_expr));
   code.copy_to_operands(incr);
   code.copy_to_operands(goto_head);

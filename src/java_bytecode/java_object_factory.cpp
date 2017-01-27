@@ -6,6 +6,8 @@ Author: Daniel Kroening, kroening@kroening.com
 
 \*******************************************************************/
 
+#include <iostream>
+
 #include <set>
 #include <sstream>
 
@@ -383,6 +385,9 @@ void java_object_factoryt::gen_nondet_array_init(
   init_code.move_to_operands(assume_inst2);
 
   side_effect_exprt java_new_array(ID_java_new_array, expr.type());
+  std::cout << "INFO: java new array type is " << expr.type().id()
+            << expr.type().subtype().pretty()
+            << std::endl;
   java_new_array.copy_to_operands(length_sym_expr);
   java_new_array.type().subtype().set(ID_C_element_type, element_type);
   codet assign=code_assignt(expr, java_new_array);

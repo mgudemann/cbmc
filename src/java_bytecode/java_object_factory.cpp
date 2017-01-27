@@ -402,12 +402,18 @@ void java_object_factoryt::gen_nondet_array_init(
   if(init_array_expr.type()!=pointer_typet(element_type))
     init_array_expr=
       typecast_exprt(init_array_expr, pointer_typet(element_type));
+  std::cout << "INFO: init array type "
+            << init_array_expr.type().pretty()
+            << std::endl;
 
   // Interpose a new symbol, as the goto-symex stage can't handle array indexing
   // via a cast.
   symbolt &array_init_symbol=new_tmp_symbol(symbol_table, "array_data_init");
   array_init_symbol.type=init_array_expr.type();
   const auto &array_init_symexpr=array_init_symbol.symbol_expr();
+  std::cout << "INFO: array_init_symexpr "
+            << array_init_symexpr.type().pretty()
+            << std::endl;
   codet data_assign=code_assignt(array_init_symexpr, init_array_expr);
   data_assign.add_source_location()=loc;
   init_code.copy_to_operands(data_assign);

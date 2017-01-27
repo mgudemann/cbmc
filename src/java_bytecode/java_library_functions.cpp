@@ -33,9 +33,13 @@ void java_library_functionst::implement_array_clone()
   code_typet &code_type=to_code_type(symbol.type);
   code_typet::parameterst &parameters(code_type.parameters());
 
-  typet ref_array_type=java_array_type('a');
+  pointer_typet ref_array_type=java_array_type('a');
   typet enumtest_type=java_type_from_string("Lenumtest;");
   pointer_typet object_ref_type=to_pointer_type(ref_array_type);
+  ref_array_type.subtype().set(ID_C_element_type, enumtest_type);
+  std::cout << "INFO: ref_array_type subtype "
+            << ref_array_type.subtype().pretty()
+            << std::endl;
 
   code_typet::parametert &this_p=parameters[0];
   irep_idt base_name="this";
@@ -69,9 +73,8 @@ void java_library_functionst::implement_array_clone()
   side_effect_exprt java_new_array(ID_java_new_array, ref_array_type);
   java_new_array.copy_to_operands(tmp_length_expr);
   java_new_array.type().subtype()
-    .set(ID_C_element_type, pointer_typet(enumtest_type));
-  java_new_array.type().subtype()
-    .set(ID_C_element_type, pointer_typet(enumtest_type));
+    .set(ID_C_element_type, java_array_type('a'));
+
   std::cout << "INFO: ref_array_pointer is " << ref_array_type.id()
             << ref_array_type.subtype().pretty()
             << std::endl;
@@ -124,9 +127,18 @@ void java_library_functionst::implement_array_clone()
 
   irep_idt target_arr_name="target_arr";
   symbolt target_array=
-    java_gensym(target_arr_name, java_reference_type(enumtest_type));
-  const exprt &target_array_expr=
-    typecast_exprt(target_array.symbol_expr(), pointer_typet(java_object));
+    java_gensym(target_arr_name, target_array_data.type());
+  exprt target_array_expr=
+    typecast_exprt(target_array_expr, pointer_typet(enumtest_type));
+//
+  // if(init_array_expr.type()!=pointer_typet(element_type))
+  // init_array_expr=
+
+
+
+  std::cout << "INFO: target_array_expr "
+            << target_array_expr.pretty()
+            << std::endl;
 
   exprt source_cell=dereference_exprt(
     plus_exprt(source_array_expr, counter_expr, source_array_data.type()),

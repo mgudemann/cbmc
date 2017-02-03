@@ -39,7 +39,9 @@ public:
 protected:
   struct optiont
   {
-    bool isset, hasval, islong;
+    bool isset=false;
+    bool hasval=false;
+    bool islong=false;
     char optchar;
     std::string optstring;
     std::list<std::string> values;

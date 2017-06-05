@@ -54,7 +54,7 @@ Function: finish_catch_push_targets
 
  Outputs:
 
- Purpose: Populate the CATCH instructions with the targets 
+ Purpose: Populate the CATCH instructions with the targets
           corresponding to their associated labels
 
 \*******************************************************************/
@@ -1507,7 +1507,8 @@ Function: goto_convertt::case_guard
 
 exprt goto_convertt::case_guard(
   const exprt &value,
-  const exprt::operandst &case_op)
+  const exprt::operandst &case_op,
+  const size_t case_number)
 {
   exprt dest=exprt(ID_or, bool_typet());
   dest.reserve_operands(case_op.size());
@@ -1517,6 +1518,7 @@ exprt goto_convertt::case_guard(
     equal_exprt eq_expr;
     eq_expr.lhs()=value;
     eq_expr.rhs()=*it;
+    eq_expr.set(ID_switch_case_number, std::to_string(case_number));
     dest.move_to_operands(eq_expr);
   }
 
@@ -1598,13 +1600,15 @@ void goto_convertt::convert_switch(
 
   goto_programt tmp_cases;
 
+  size_t case_number=0;
   for(auto &case_pair : targets.cases)
   {
     const caset &case_ops=case_pair.second;
 
     assert(!case_ops.empty());
 
-    exprt guard_expr=case_guard(argument, case_ops);
+    exprt guard_expr=case_guard(argument, case_ops, case_number);
+    case_number++;
 
     goto_programt::targett x=tmp_cases.add_instruction();
     x->make_goto(case_pair.first);

@@ -473,7 +473,8 @@ protected:
 
   exprt case_guard(
     const exprt &value,
-    const caset &case_op);
+    const caset &case_op,
+    const size_t);
 
   // if(cond) { true_case } else { false_case }
   void generate_ifthenelse(

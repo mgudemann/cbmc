@@ -20,6 +20,7 @@ SRC += unit_tests.cpp \
        analyses/does_remove_const/is_type_at_least_as_const_as.cpp \
        java_bytecode/java_bytecode_convert_class/convert_abstract_class.cpp \
        java_bytecode/java_bytecode_parse_generics/parse_generic_class.cpp \
+       java_bytecode/java_bytecode_parse_generics/parse_java_generic_type_signatures.cpp \
        miniBDD_new.cpp \
        solvers/refinement/string_constraint_generator_valueof/calculate_max_string_length.cpp \
        solvers/refinement/string_constraint_generator_valueof/get_numeric_value_from_character.cpp \
@@ -86,3 +87,6 @@ string_utils$(EXEEXT): string_utils$(OBJEXT) $(CPROVER_LIBS)
 
 sharing_node$(EXEEXT): sharing_node$(OBJEXT) $(CPROVER_LIBS)
 	$(LINKBIN)
+
+generic_types$(EXEEXT): parse_java_generic_type_signatures$(OBJEXT) ($CPROVER_LIBS)
+  $(LINKBIN)

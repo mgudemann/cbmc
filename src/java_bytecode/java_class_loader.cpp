@@ -36,6 +36,12 @@ java_bytecode_parse_treet &java_class_loadert::operator()(
   queue.push("java.lang.Throwable");
   queue.push(class_name);
 
+  // Require often used library classes that implement widely used interfaces
+  std::for_each(
+    java_load_classes.begin(),
+    java_load_classes.end(),
+    [&](const irep_idt &id) { queue.push(id); });
+
   java_class_loader_limitt class_loader_limit(
     get_message_handler(), java_cp_include_files);
 
@@ -277,4 +283,14 @@ jar_filet &java_class_loadert::jar_pool(
   }
   else
     return it->second;
+}
+
+/// Adds the list of classes to the load queue, forcing them to be loaded even
+/// without explicit reference
+/// \param classes: list of class identifiers
+void java_class_loadert::add_load_classes(std::vector<irep_idt> &classes)
+{
+  std::for_each(classes.begin(), classes.end(), [&](const irep_idt &id) {
+    java_load_classes.push_back(id);
+  });
 }

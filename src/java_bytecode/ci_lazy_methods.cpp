@@ -24,6 +24,7 @@ ci_lazy_methodst::ci_lazy_methodst(
   const std::vector<irep_idt> &main_jar_classes,
   const std::vector<irep_idt> &lazy_methods_extra_entry_points,
   java_class_loadert &java_class_loader,
+  const std::vector<irep_idt> &java_load_classes,
   const select_pointer_typet &pointer_type_selector,
   message_handlert &message_handler):
     messaget(message_handler),
@@ -31,6 +32,7 @@ ci_lazy_methodst::ci_lazy_methodst(
     main_jar_classes(main_jar_classes),
     lazy_methods_extra_entry_points(lazy_methods_extra_entry_points),
     java_class_loader(java_class_loader),
+    java_load_classes(java_load_classes),
     pointer_type_selector(pointer_type_selector)
 {
   // build the class hierarchy
@@ -279,6 +281,14 @@ void ci_lazy_methodst::initialize_needed_classes(
   lazy_methods.add_needed_class("java::java.lang.String");
   lazy_methods.add_needed_class("java::java.lang.Class");
   lazy_methods.add_needed_class("java::java.lang.Object");
+
+  // As in class_loader, ensure these classes stay available
+  std::for_each(
+    java_load_classes.begin(),
+    java_load_classes.end(),
+    [&](const irep_idt &id) {
+      lazy_methods.add_needed_class("java::" + id2string(id));
+    });
 }
 
 /// Build up list of methods for types for a pointer and any types it

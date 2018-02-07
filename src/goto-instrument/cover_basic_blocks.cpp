@@ -210,8 +210,9 @@ void cover_basic_blockst::report_block_anomalies(
 void cover_basic_blockst::output(std::ostream &out) const
 {
   for(const auto &block_pair : block_map)
-    out << block_pair.first->source_location << " -> " << block_pair.second
-        << '\n';
+    out << "location number: " << block_pair.first->location_number
+        << " source: " << block_pair.first->source_location << " -> "
+        << block_pair.second << '\n';
 }
 
 void cover_basic_blockst::update_covered_lines(block_infot &block_info)

@@ -12,7 +12,7 @@ Date: May 2016
 /// Coverage Instrumentation
 
 #include "cover.h"
-
+#include <iostream>
 #include <util/config.h>
 #include <util/message.h>
 #include <util/make_unique.h>
@@ -31,8 +31,14 @@ void instrument_cover_goals(
   message_handlert &message_handler)
 {
   cover_basic_blockst basic_blocks(goto_program);
+  std::cout << "INFO about basic blocks:" << std::endl;
+  basic_blocks.output(std::cout);
+  std::cout << std::endl;
   basic_blocks.select_unique_java_bytecode_indices(
     goto_program, message_handler);
+  std::cout << "INFO after unique selection: " << std::endl;
+  basic_blocks.output(std::cout);
+  std::cout << std::endl;
   basic_blocks.report_block_anomalies(goto_program, message_handler);
 
   instrumenters(goto_program, basic_blocks);

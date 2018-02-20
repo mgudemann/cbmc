@@ -213,7 +213,6 @@ protected:
 #define VTYPE_INFO_OBJECT      7
 #define VTYPE_INFO_UNINIT      8
 
-
 class structured_pool_entryt
 {
 public:
@@ -222,9 +221,13 @@ public:
   {
   }
 
-  u1 get_tag() const { return tag; }
+  u1 get_tag() const
+  {
+    return tag;
+  }
 
-  typedef std::function<java_bytecode_parsert::pool_entryt &(u2)> pool_entry_lookupt;
+  typedef std::function<java_bytecode_parsert::pool_entryt &(u2)>
+    pool_entry_lookupt;
   typedef java_bytecode_parsert::pool_entryt pool_entryt;
 
 protected:
@@ -244,10 +247,10 @@ private:
 class class_infot : public structured_pool_entryt
 {
 public:
-  explicit class_infot(const pool_entryt &entry): structured_pool_entryt(entry)
+  explicit class_infot(const pool_entryt &entry) : structured_pool_entryt(entry)
   {
     PRECONDITION(entry.tag == CONSTANT_Class);
-    name_index=entry.ref1;
+    name_index = entry.ref1;
   }
 
   std::string get_name(pool_entry_lookupt pool_entry) const
@@ -293,36 +296,39 @@ private:
 class base_ref_infot : public structured_pool_entryt
 {
 public:
-  explicit base_ref_infot(pool_entryt entry)
-    : structured_pool_entryt(entry)
+  explicit base_ref_infot(pool_entryt entry) : structured_pool_entryt(entry)
   {
     static std::set<u1> info_tags = {
       CONSTANT_Fieldref, CONSTANT_Methodref, CONSTANT_InterfaceMethodref};
     PRECONDITION(info_tags.find(entry.tag) != info_tags.end());
-    class_index=entry.ref1;
-    name_and_type_index=entry.ref2;
+    class_index = entry.ref1;
+    name_and_type_index = entry.ref2;
   }
 
-  u1 get_class_index() const { return class_index; }
-  u1 get_name_and_type_index() const { return name_and_type_index; }
+  u1 get_class_index() const
+  {
+    return class_index;
+  }
+  u1 get_name_and_type_index() const
+  {
+    return name_and_type_index;
+  }
 
   name_and_type_infot get_name_and_type(pool_entry_lookupt pool_entry) const
   {
-    const pool_entryt &name_and_type_entry =
-      pool_entry(name_and_type_index);
+    const pool_entryt &name_and_type_entry = pool_entry(name_and_type_index);
 
     INVARIANT(
       name_and_type_entry.tag == CONSTANT_NameAndType,
-      "name_and_typeindex did not correspond to a name_and_type in the constants "
-        "pool");
+      "name_and_typeindex did not correspond to a name_and_type in the "
+      "constant pool");
 
     return name_and_type_infot{name_and_type_entry};
   }
 
   class_infot get_class(pool_entry_lookupt pool_entry) const
   {
-    const pool_entryt &class_entry =
-      pool_entry(class_index);
+    const pool_entryt &class_entry = pool_entry(class_index);
 
     return class_infot{class_entry};
   }
@@ -335,9 +341,9 @@ private:
 class method_handle_infot : public structured_pool_entryt
 {
 public:
-
-  /// Correspond to the different valid values for field reference_kind
-/// From Java 8 spec 4.4.8
+  /// Correspond to the different valid values for field reference_kind From
+  /// Java 8 spec 4.4.8
+  /// (https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html)
   enum class method_handle_kindt
   {
     REF_getField = 1,
@@ -378,7 +384,6 @@ public:
     case method_handle_kindt::REF_invokeVirtual:
     case method_handle_kindt::REF_newInvokeSpecial:
     {
-
       INVARIANT(ref_entry.get_tag() == CONSTANT_Methodref, "4.4.2");
       break;
     }
@@ -387,20 +392,19 @@ public:
     {
       INVARIANT(
         ref_entry.get_tag() == CONSTANT_Methodref ||
-        ref_entry.get_tag() == CONSTANT_InterfaceMethodref,
+          ref_entry.get_tag() == CONSTANT_InterfaceMethodref,
         "4.4.2");
       break;
     }
     case method_handle_kindt::REF_invokeInterface:
     {
-      INVARIANT(ref_entry.get_tag() == CONSTANT_InterfaceMethodref,"");
+      INVARIANT(ref_entry.get_tag() == CONSTANT_InterfaceMethodref, "");
       break;
     }
     }
 
     return ref_entry;
   }
-
 
 private:
   method_handle_kindt reference_kind;
@@ -1758,8 +1762,8 @@ java_bytecode_parsert::parse_method_handle(const method_handle_infot &entry)
   {
     // names seem to be lambda$POSTFIX$NUM
     // where POSTFIX is FUN for a function name in which the lambda is define
-    //                   "static" when it is a static member of the class
-    //                   "new" when it is a class variable, instantiated in <init>
+    //                "static" when it is a static member of the class
+    //                "new" when it is a class variable, instantiated in <init>
     lambda_method_handle.lambda_method_name =
       name_and_type.get_name(pool_entry_lambda);
     lambda_method_handle.handle_type =

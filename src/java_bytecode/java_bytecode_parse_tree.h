@@ -191,10 +191,9 @@ public:
       irep_idt lambda_method_name;
       irep_idt interface_type;
       irep_idt method_type;
-      lambda_method_handlet()
-        : handle_type(method_handle_typet::UNKNOWN_HANDLE)
-        {
-        }
+      lambda_method_handlet() : handle_type(method_handle_typet::UNKNOWN_HANDLE)
+      {
+      }
     };
 
     typedef std::map<std::pair<irep_idt, size_t>, lambda_method_handlet>

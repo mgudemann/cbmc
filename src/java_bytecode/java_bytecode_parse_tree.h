@@ -247,4 +247,18 @@ public:
   }
 };
 
+class fieldref_exprt : public exprt
+{
+public:
+  fieldref_exprt(
+    const typet &type,
+    const irep_idt &component_name,
+    const irep_idt &class_name)
+    : exprt(ID_empty_string, type)
+  {
+    set(ID_class, class_name);
+    set(ID_component_name, component_name);
+  }
+};
+
 #endif // CPROVER_JAVA_BYTECODE_JAVA_BYTECODE_PARSE_TREE_H

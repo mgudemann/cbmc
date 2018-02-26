@@ -19,14 +19,14 @@
 require_parse_tree::lambda_method_handlet
 require_parse_tree::require_lambda_entry_for_descriptor(
   const java_bytecode_parse_treet::classt &parsed_class,
-  std::string descriptor,
+  const std::string &descriptor,
   const size_t entry_index)
 {
   REQUIRE(entry_index < parsed_class.lambda_method_handle_map.size());
   typedef java_bytecode_parse_treet::classt::lambda_method_handle_mapt::
     value_type lambda_method_entryt;
 
-  int matches_found = 0;
+  size_t matches_found = 0;
 
   const auto matching_lambda_entry = std::find_if(
     parsed_class.lambda_method_handle_map.begin(),

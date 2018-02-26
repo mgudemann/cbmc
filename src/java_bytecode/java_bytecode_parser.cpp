@@ -55,6 +55,7 @@ public:
     lambda_method_handlet;
   typedef java_bytecode_parse_treet::classt::lambda_method_handle_mapt
     lambda_method_handle_mapt;
+  typedef java_bytecode_parse_treet::classt::u2_valuest u2_valuest;
 
   java_bytecode_parse_treet parse_tree;
 
@@ -1731,8 +1732,6 @@ void java_bytecode_parsert::parse_local_variable_type_table(methodt &method)
   }
 }
 
-
-
 /// Read method handle pointed to from constant pool entry at index, return type
 /// of method handle and name if lambda function is found.
 /// \param entry: the constant pool entry of the methodhandle_info structure
@@ -1746,7 +1745,7 @@ java_bytecode_parsert::parse_method_handle(const method_handle_infot &entry)
 
   const base_ref_infot &ref_entry = entry.get_reference(pool_entry_lambda);
 
-  const class_infot &class_entry=ref_entry.get_class(pool_entry_lambda);
+  const class_infot &class_entry = ref_entry.get_class(pool_entry_lambda);
   const name_and_type_infot &name_and_type =
     ref_entry.get_name_and_type(pool_entry_lambda);
 
@@ -1757,8 +1756,7 @@ java_bytecode_parsert::parse_method_handle(const method_handle_infot &entry)
 
   lambda_method_handlet lambda_method_handle;
 
-  if(
-    has_prefix(name_and_type.get_name(pool_entry_lambda), "lambda$"))
+  if(has_prefix(name_and_type.get_name(pool_entry_lambda), "lambda$"))
   {
     // names seem to be lambda$POSTFIX$NUM
     // where POSTFIX is FUN for a function name in which the lambda is define
@@ -1778,8 +1776,7 @@ java_bytecode_parsert::parse_method_handle(const method_handle_infot &entry)
 /// Read all entries of the `BootstrapMethods` attribute of a class file.
 /// \param parsed_class: the class representation of the class file that is
 /// currently parsed
-void java_bytecode_parsert::read_bootstrapmethods_entry(
-  classt &parsed_class)
+void java_bytecode_parsert::read_bootstrapmethods_entry(classt &parsed_class)
 {
   u2 num_bootstrap_methods = read_u2();
   for(size_t i = 0; i < num_bootstrap_methods; i++)
@@ -1790,8 +1787,13 @@ void java_bytecode_parsert::read_bootstrapmethods_entry(
     method_handle_infot method_handle{entry};
 
     u2 num_bootstrap_arguments = read_u2();
-    debug() << "INFO: parse BootstrapMethod handle "
-            << num_bootstrap_arguments << " #args" << eom;
+    debug() << "INFO: parse BootstrapMethod handle " << num_bootstrap_arguments
+            << " #args" << eom;
+
+    // read u2 values of entry into vector
+    u2_valuest u2_values;
+    for(size_t i = 0; i < num_bootstrap_arguments; i++)
+      u2_values.push_back(read_u2());
 
     // try parsing bootstrap method handle
     if(num_bootstrap_arguments >= 3)
@@ -1822,9 +1824,9 @@ void java_bytecode_parsert::read_bootstrapmethods_entry(
       // We read the three arguments here to see whether they correspond to
       // our hypotheses for this being a lambda function entry.
 
-      u2 argument_index1 = read_u2();
-      u2 argument_index2 = read_u2();
-      u2 argument_index3 = read_u2();
+      u2 argument_index1 = u2_values[0];
+      u2 argument_index2 = u2_values[1];
+      u2 argument_index3 = u2_values[2];
 
       // The additional arguments for the altmetafactory call are skipped,
       // as they are currently not used. We verify though that they are of
@@ -1833,15 +1835,19 @@ void java_bytecode_parsert::read_bootstrapmethods_entry(
       bool recognized = true;
       for(size_t i = 3; i < num_bootstrap_arguments; i++)
       {
-        u2 skipped_argument = read_u2();
+        u2 skipped_argument = u2_values[i];
         recognized &= pool_entry(skipped_argument).tag == CONSTANT_Integer;
       }
       if(!recognized)
       {
         debug() << "format of BootstrapMethods entry not recognized" << eom;
+        lambda_method_handlet lambda_method_handle;
+        lambda_method_handle.handle_type = method_handle_typet::UNKNOWN_HANDLE;
+        lambda_method_handle.u2_values.swap(u2_values);
+        parsed_class.lambda_method_handle_map[{parsed_class.name, i}] =
+          lambda_method_handle;
         return;
       }
-
       const pool_entryt &interface_type_argument = pool_entry(argument_index1);
       const pool_entryt &method_handle_argument = pool_entry(argument_index2);
       const pool_entryt &method_type_argument = pool_entry(argument_index3);
@@ -1850,7 +1856,14 @@ void java_bytecode_parsert::read_bootstrapmethods_entry(
         !(interface_type_argument.tag == CONSTANT_MethodType &&
           method_handle_argument.tag == CONSTANT_MethodHandle &&
           method_type_argument.tag == CONSTANT_MethodType))
+      {
+        lambda_method_handlet lambda_method_handle;
+        lambda_method_handle.handle_type = method_handle_typet::UNKNOWN_HANDLE;
+        lambda_method_handle.u2_values.swap(u2_values);
+        parsed_class.lambda_method_handle_map[{parsed_class.name, i}] =
+          lambda_method_handle;
         return;
+      }
 
       debug() << "INFO: parse lambda handle" << eom;
       optionalt<lambda_method_handlet> lambda_method_handle =
@@ -1861,6 +1874,7 @@ void java_bytecode_parsert::read_bootstrapmethods_entry(
         lambda_method_handle->handle_type !=
           method_handle_typet::LAMBDA_METHOD_HANDLE)
       {
+        lambda_method_handle->u2_values.swap(u2_values);
         error() << "ERROR: could not parse lambda function method handle"
                 << eom;
       }
@@ -1870,6 +1884,7 @@ void java_bytecode_parsert::read_bootstrapmethods_entry(
           pool_entry(interface_type_argument.ref1).s;
         lambda_method_handle->method_type =
           pool_entry(method_type_argument.ref1).s;
+        lambda_method_handle->u2_values.swap(u2_values);
         debug() << "lambda function reference "
                 << id2string(lambda_method_handle->lambda_method_name)
                 << " in class \"" << parsed_class.name << "\""
@@ -1877,15 +1892,17 @@ void java_bytecode_parsert::read_bootstrapmethods_entry(
                 << id2string(pool_entry(interface_type_argument.ref1).s)
                 << "\n  method type is "
                 << id2string(pool_entry(method_type_argument.ref1).s) << eom;
-        parsed_class.lambda_method_handle_map[{parsed_class.name, i}] =
-          *lambda_method_handle;
       }
+      parsed_class.lambda_method_handle_map[{parsed_class.name, i}] =
+        *lambda_method_handle;
     }
     else
     {
-      // skip bytes to align for next entry
-      for(size_t i = 0; i < num_bootstrap_arguments; i++)
-        read_u2();
+      lambda_method_handlet lambda_method_handle;
+      lambda_method_handle.handle_type = method_handle_typet::UNKNOWN_HANDLE;
+      lambda_method_handle.u2_values.swap(u2_values);
+      parsed_class.lambda_method_handle_map[{parsed_class.name, i}] =
+        lambda_method_handle;
       error() << "ERROR: num_bootstrap_arguments must be at least 3" << eom;
     }
   }

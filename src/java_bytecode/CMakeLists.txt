@@ -4,7 +4,7 @@ add_subdirectory(library)
 # target 'java_bytecode' depends on all .cpp and .h files
 file(GLOB sources "*.cpp")
 file(GLOB_RECURSE headers "*.h")
-add_library(java_bytecode ${sources} ${headers})
+add_library(java_bytecode SHARED ${sources} ${headers})
 
 # define the include directories (passed to the compiler with -I) that those
 # targets wishing to depend on the target 'java_bytecode' may want to use

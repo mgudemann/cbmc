@@ -1,5 +1,5 @@
 file(GLOB_RECURSE sources "*.cpp" "*.h")
-add_library(cpp ${sources})
+add_library(cpp SHARED ${sources})
 
 generic_includes(cpp)
 

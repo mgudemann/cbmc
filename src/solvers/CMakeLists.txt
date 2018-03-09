@@ -62,7 +62,7 @@ list(REMOVE_ITEM sources
     ${limmat_source}
 )
 
-add_library(solvers ${sources})
+add_library(solvers SHARED ${sources})
 
 include("${CBMC_SOURCE_DIR}/../cmake/DownloadProject.cmake")
 

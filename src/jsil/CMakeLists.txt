@@ -2,7 +2,7 @@ generic_bison(jsil)
 generic_flex(jsil)
 
 file(GLOB_RECURSE sources "*.cpp" "*.h")
-add_library(jsil
+add_library(jsil SHARED
     ${sources}
     ${BISON_parser_OUTPUTS}
     ${FLEX_scanner_OUTPUTS}

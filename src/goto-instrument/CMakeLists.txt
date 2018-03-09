@@ -6,7 +6,7 @@ list(REMOVE_ITEM sources
     # This doesn't build
     ${CMAKE_CURRENT_SOURCE_DIR}/accelerate/linearize.cpp
 )
-add_library(goto-instrument-lib ${sources})
+add_library(goto-instrument-lib SHARED ${sources})
 
 generic_includes(goto-instrument-lib)
 

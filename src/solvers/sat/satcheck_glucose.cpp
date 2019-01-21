@@ -7,7 +7,6 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 #include "satcheck_glucose.h"
-
 #ifndef _MSC_VER
 #include <inttypes.h>
 #endif
@@ -81,12 +80,12 @@ void satcheck_glucose_baset<T>::set_polarity(literalt a, bool value)
 
 const std::string satcheck_glucose_no_simplifiert::solver_text()
 {
-  return "Glucose Syrup without simplifier";
+  return "Glucose 4.1 without simplifier";
 }
 
 const std::string satcheck_glucose_simplifiert::solver_text()
 {
-  return "Glucose Syrup with simplifier";
+  return "Glucose 4.1 with simplifier";
 }
 
 template<typename T>

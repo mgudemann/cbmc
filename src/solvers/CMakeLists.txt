@@ -82,8 +82,8 @@ elseif("${sat_impl}" STREQUAL "glucose")
     message(STATUS "Building solvers with glucose")
 
     download_project(PROJ glucose
-        URL http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-syrup.tgz
-        PATCH_COMMAND patch -p1 -i ${CBMC_SOURCE_DIR}/../scripts/glucose-syrup-patch
+        URL http://guedemann.org/glucose-syrup.tgz
+        PATCH_COMMAND patch -p1 -i ${CBMC_SOURCE_DIR}/../scripts/glucose-syrup-4.1-patch
         COMMAND cmake -E copy ${CBMC_SOURCE_DIR}/../scripts/glucose_CMakeLists.txt CMakeLists.txt
     )
 

@@ -13,6 +13,10 @@ Author: Daniel Kroening
 #include "cover_filter.h"
 #include "cover_instrument.h"
 
+#include <typeinfo>
+#include <iostream>
+#include <string>
+
 void cover_branch_instrumentert::instrument(
   const irep_idt &function_id,
   goto_programt &goto_program,
@@ -52,17 +56,58 @@ void cover_branch_instrumentert::instrument(
     std::string true_comment = "block " + b + " branch true";
     std::string false_comment = "block " + b + " branch false";
 
-    exprt guard = i_it->guard;
-    source_locationt source_location = i_it->source_location;
+    const std::string& name = typeid(basic_blocks).name();
+    const std::string& java_name = "cover_basic_blocks_javat";
 
-    goto_program.insert_before_swap(i_it);
-    *i_it = make_assertion(not_exprt(guard), source_location);
-    initialize_source_location(i_it, true_comment, function_id);
+    const bool is_java =
+      0 == name.compare(name.size() - java_name.size(), java_name.size(), java_name);
 
-    goto_program.insert_before_swap(i_it);
-    *i_it = make_assertion(guard, source_location);
-    initialize_source_location(i_it, false_comment, function_id);
+    if (is_java) {
+      exprt guard = i_it->guard;
 
-    std::advance(i_it, 2);
+      const cover_basic_blocks_javat &java_basic_blocks =
+        dynamic_cast<const cover_basic_blocks_javat &>(basic_blocks);
+      // man müsste hier bei Java den bytecode index des jeweiligen targets nehmen
+      // und der nächsten GOTO instruction
+
+      std::size_t target_block_nr = java_basic_blocks.block_of(i_it->targets.front());
+      std::size_t next_block_nr = java_basic_blocks.block_of(std::next(i_it));
+
+      std::cout << "target " << i_it->targets.front()->location_number
+                << " block number " << target_block_nr
+                << " block location " << java_basic_blocks.source_location_of(target_block_nr).as_string()
+                << std::endl;
+      std::cout << "next " << std::next(i_it)->location_number
+                << " block number " << next_block_nr
+                << " block location " << java_basic_blocks.source_location_of(next_block_nr).as_string()
+                << std::endl;
+
+
+      source_locationt source_location = i_it->source_location;
+
+      goto_program.insert_before_swap(i_it);
+      *i_it = make_assertion(not_exprt(guard), source_location);
+      initialize_source_location(i_it, true_comment, function_id);
+
+      goto_program.insert_before_swap(i_it);
+      *i_it = make_assertion(guard, source_location);
+      initialize_source_location(i_it, false_comment, function_id);
+
+      std::advance(i_it, 2);
+    } else {
+
+      exprt guard = i_it->guard;
+      source_locationt source_location = i_it->source_location;
+
+      goto_program.insert_before_swap(i_it);
+      *i_it = make_assertion(not_exprt(guard), source_location);
+      initialize_source_location(i_it, true_comment, function_id);
+
+      goto_program.insert_before_swap(i_it);
+      *i_it = make_assertion(guard, source_location);
+      initialize_source_location(i_it, false_comment, function_id);
+
+      std::advance(i_it, 2);
+    }
   }
 }

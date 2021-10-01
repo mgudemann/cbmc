@@ -15,6 +15,8 @@ Author: Peter Schrammel
 #include <util/message.h>
 #include <util/string2int.h>
 
+#include <iostream>
+
 optionalt<std::size_t> cover_basic_blockst::continuation_of_block(
   const goto_programt::const_targett &instruction,
   cover_basic_blockst::block_mapt &block_map)
@@ -220,6 +222,17 @@ cover_basic_blocks_javat::cover_basic_blocks_javat(
     block_locations.at(i).set_basic_block_source_lines(
       block_source_lines.at(i).to_string());
   }
+
+  forall_goto_program_instructions(it, _goto_program)
+  {
+      std::cout << it->location_number << " block: "
+              << block_of(it) << " -  "
+              << it->to_string()
+              << " '" << it->source_location.as_string() << "'"
+              << std::endl;
+  }
+
+  output(std::cout);
 }
 
 std::size_t
